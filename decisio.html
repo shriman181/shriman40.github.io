@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decisio — Actuarial Intelligence for Non-Life Reserving</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080b10;
+    --bg2: #0d1219;
+    --bg3: #111820;
+    --bg4: #161e28;
+    --gold: #c8a96e;
+    --gold2: #e8c98e;
+    --gold-dim: rgba(200,169,110,0.12);
+    --gold-line: rgba(200,169,110,0.25);
+    --ink: #f0ece4;
+    --ink2: #b8b4aa;
+    --ink3: #6e6b64;
+    --red: #c0392b;
+    --teal: #1a7a6e;
+    --teal-light: #2aa898;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.10);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Outfit', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ─── GRAIN OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.022;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── UTILITIES ─── */
+  .mono { font-family: var(--mono); }
+  .serif { font-family: var(--serif); }
+  .gold { color: var(--gold); }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 2rem; }
+  .fade-up { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(8,11,16,0.98) 0%, rgba(8,11,16,0) 100%);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--gold); }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-decoration: none;
+    border: 0.5px solid var(--gold-line);
+    padding: 8px 18px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .nav-cta:hover { background: var(--gold-dim); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding: 8rem 2rem 5rem;
+    overflow: hidden;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,169,110,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,169,110,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 60% at 60% 40%, black 20%, transparent 80%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,122,110,0.08) 0%, transparent 70%);
+    top: 10%;
+    right: -10%;
+    pointer-events: none;
+  }
+
+  .hero-glow2 {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,169,110,0.06) 0%, transparent 70%);
+    bottom: 20%;
+    left: -5%;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-headline {
+    font-family: var(--serif);
+    font-size: clamp(46px, 6vw, 82px);
+    font-weight: 400;
+    line-height: 1.08;
+    color: var(--ink);
+    max-width: 800px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-headline em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--ink2);
+    max-width: 540px;
+    line-height: 1.75;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--gold);
+    padding: 14px 32px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
+
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink2);
+    padding: 14px 32px;
+    text-decoration: none;
+    border: 0.5px solid var(--border2);
+    transition: color 0.2s, border-color 0.2s;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover { color: var(--gold); border-color: var(--gold-line); }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 4.5rem;
+    padding-top: 2.5rem;
+    border-top: 0.5px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .hero-stat-n {
+    font-family: var(--serif);
+    font-size: 38px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .hero-stat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-top: 5px;
+  }
+
+  /* ─── TICKER ─── */
+  .ticker-bar {
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 0;
+    animation: ticker 28s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink3);
+    padding: 0 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .ticker-item span { color: var(--gold); margin-right: 6px; }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ─── SECTIONS ─── */
+  section { padding: 6rem 0; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(34px, 4vw, 54px);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--ink);
+    max-width: 640px;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  .section-body {
+    font-size: 15.5px;
+    font-weight: 300;
+    color: var(--ink2);
+    max-width: 520px;
+    line-height: 1.8;
+  }
+
+  /* ─── PROBLEM ─── */
+  .problem-section { background: var(--bg2); }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-top: 3.5rem;
+    border: 0.5px solid var(--border);
+  }
+
+  .problem-cell {
+    padding: 2rem 1.75rem;
+    border-right: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .problem-cell:hover { background: rgba(200,169,110,0.03); }
+  .problem-cell:nth-child(2n) { border-right: none; }
+  .problem-cell:nth-child(5), .problem-cell:nth-child(6) { border-bottom: none; }
+
+  .problem-cell-num {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--ink3);
+    margin-bottom: 1rem;
+  }
+
+  .problem-cell-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    margin-bottom: 0.75rem;
+  }
+
+  .tag-critical { background: rgba(192,57,43,0.12); color: #e07060; border: 0.5px solid rgba(192,57,43,0.3); }
+  .tag-high { background: rgba(200,169,110,0.1); color: var(--gold); border: 0.5px solid var(--gold-line); }
+  .tag-medium { background: rgba(26,122,110,0.1); color: var(--teal-light); border: 0.5px solid rgba(26,122,110,0.3); }
+
+  .problem-cell-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .problem-cell-body {
+    font-size: 13.5px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.7;
+  }
+
+  /* ─── PRODUCT ─── */
+  .product-section { background: var(--bg); }
+
+  .product-tabs {
+    display: flex;
+    gap: 0;
+    border: 0.5px solid var(--border);
+    margin-top: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--ink3);
+    border: none;
+    border-right: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:last-child { border-right: none; }
+  .tab-btn:hover { color: var(--gold); background: var(--gold-dim); }
+  .tab-btn.active { color: var(--bg); background: var(--gold); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 0.5px solid var(--border); border-top: none; }
+
+  .tab-content {
+    padding: 2.5rem 2rem;
+    border-right: 0.5px solid var(--border);
+  }
+
+  .tab-visual {
+    padding: 2rem;
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+
+  .tab-title {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .tab-body {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.75;
+    margin-bottom: 1.25rem;
+  }
+
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+  .feature-list li {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--ink2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .feature-list li::before {
+    content: '→';
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* Triangle visualization */
+  .tri-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+
+  .tri-table th {
+    color: var(--ink3);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    padding: 5px 8px;
+    text-align: right;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .tri-table td {
+    padding: 5px 8px;
+    text-align: right;
+    border-bottom: 0.5px solid var(--border);
+    color: var(--ink2);
+    transition: background 0.2s;
+  }
+
+  .tri-table td.highlight { color: var(--gold); font-weight: 500; }
+  .tri-table td.ai-gen { color: var(--teal-light); font-style: italic; }
+  .tri-table .row-label { text-align: left; color: var(--ink3); }
+
+  /* Scenario rows */
+  .scenario-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border: 0.5px solid var(--border);
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .scenario-label { font-family: var(--mono); font-size: 10px; color: var(--ink2); letter-spacing: 0.05em; }
+  .scenario-val { font-family: var(--mono); font-size: 11px; font-weight: 500; }
+  .val-neg { color: #e07060; }
+  .val-pos { color: var(--teal-light); }
+  .val-base { color: var(--gold); }
+
+  .scenario-bar-wrap { width: 80px; height: 4px; background: var(--border2); position: relative; }
+  .scenario-bar { height: 100%; background: var(--gold); position: absolute; left: 0; top: 0; }
+  .scenario-bar.red { background: #c0392b; }
+  .scenario-bar.teal { background: var(--teal); }
+
+  /* Memo preview */
+  .memo-block {
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: var(--ink2);
+  }
+
+  .memo-heading { color: var(--ink); font-weight: 500; margin-bottom: 0.5rem; font-size: 11px; letter-spacing: 0.08em; }
+  .memo-ai { color: var(--teal-light); }
+  .memo-cite { color: var(--gold); }
+
+  /* ─── WORKFLOW ─── */
+  .workflow-section { background: var(--bg2); }
+
+  .workflow-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border: 0.5px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  .workflow-step {
+    padding: 2rem 1.25rem;
+    border-right: 0.5px solid var(--border);
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .workflow-step:hover { background: var(--gold-dim); }
+  .workflow-step:last-child { border-right: none; }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .step-icon {
+    font-size: 22px;
+    margin-bottom: 0.75rem;
+    line-height: 1;
+  }
+
+  .step-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+
+  .step-body {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--ink3);
+    line-height: 1.65;
+  }
+
+  /* ─── MOAT ─── */
+  .moat-section { background: var(--bg); }
+
+  .moat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin-top: 3rem;
+  }
+
+  .moat-cell {
+    background: var(--bg);
+    padding: 2.25rem 2rem;
+    transition: background 0.3s;
+  }
+
+  .moat-cell:hover { background: var(--bg2); }
+
+  .moat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  .moat-title {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+    line-height: 1.25;
+  }
+
+  .moat-body {
+    font-size: 13.5px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.75;
+  }
+
+  /* ─── MARKET ─── */
+  .market-section { background: var(--bg2); }
+
+  .market-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+
+  .icp-card {
+    border: 0.5px solid var(--border);
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .icp-card:hover { background: var(--gold-dim); }
+
+  .icp-card.primary { border-top: 2px solid var(--gold); }
+  .icp-card.secondary { border-top: 2px solid var(--teal); }
+
+  .icp-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  .icp-badge.p { color: var(--gold); }
+  .icp-badge.s { color: var(--teal-light); }
+
+  .icp-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .icp-body {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.7;
+  }
+
+  .pricing-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .pricing-row:last-child { border-bottom: none; }
+
+  .pricing-tier {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .pricing-price {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+  }
+
+  .pricing-desc {
+    font-size: 12px;
+    color: var(--ink3);
+    margin-top: 2px;
+    font-weight: 300;
+  }
+
+  /* ─── ROADMAP ─── */
+  .roadmap-section { background: var(--bg); }
+
+  .roadmap-line {
+    position: relative;
+    margin-top: 3rem;
+    padding-left: 1.5rem;
+  }
+
+  .roadmap-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--gold), var(--teal), transparent);
+  }
+
+  .roadmap-item {
+    position: relative;
+    margin-bottom: 2.25rem;
+    padding-left: 1.25rem;
+  }
+
+  .roadmap-item::before {
+    content: '';
+    position: absolute;
+    left: -1.73rem;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  .roadmap-item.phase2::before { background: var(--teal); }
+  .roadmap-item.phase3::before { background: var(--ink3); }
+
+  .roadmap-period {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 3px;
+  }
+
+  .roadmap-period.p2 { color: var(--teal-light); }
+  .roadmap-period.p3 { color: var(--ink3); }
+
+  .roadmap-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .roadmap-body {
+    font-size: 13.5px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.7;
+    max-width: 620px;
+  }
+
+  /* ─── FOUNDERS ─── */
+  .founders-section { background: var(--bg2); }
+
+  .founder-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 4rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+
+  .founder-portrait {
+    aspect-ratio: 1;
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .founder-portrait::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,169,110,0.05) 0%, transparent 60%);
+  }
+
+  .founder-initials {
+    font-family: var(--serif);
+    font-size: 80px;
+    font-weight: 300;
+    color: var(--gold);
+    opacity: 0.4;
+    letter-spacing: 0.1em;
+    line-height: 1;
+  }
+
+  .founder-name {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .founder-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+  }
+
+  .founder-bio {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink2);
+    line-height: 1.85;
+    margin-bottom: 1.75rem;
+    max-width: 560px;
+  }
+
+  .founder-credentials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cred-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    border: 0.5px solid var(--border);
+    padding: 5px 12px;
+  }
+
+  /* ─── CTA ─── */
+  .cta-section {
+    background: var(--bg);
+    border-top: 0.5px solid var(--border);
+    text-align: center;
+    padding: 7rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,169,110,0.05) 0%, transparent 70%);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cta-eyebrow {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+  }
+
+  .cta-title {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 62px);
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-title em { font-style: italic; color: var(--gold); }
+
+  .cta-sub {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink2);
+    max-width: 440px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.75;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-form {
+    display: flex;
+    gap: 0;
+    max-width: 440px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-input {
+    flex: 1;
+    padding: 14px 18px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-right: none;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 300;
+    outline: none;
+  }
+
+  .cta-input::placeholder { color: var(--ink3); }
+  .cta-input:focus { border-color: var(--gold-line); }
+
+  .cta-submit {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--gold);
+    border: none;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+
+  .cta-submit:hover { background: var(--gold2); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    padding: 2.5rem 2rem;
+  }
+
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--ink2);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-logo span { color: var(--gold); }
+
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--ink3);
+    text-align: center;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--gold); }
+
+  /* ─── DIVIDER RULE ─── */
+  .rule {
+    height: 0.5px;
+    background: var(--border);
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .problem-cell { border-right: none; }
+    .problem-cell:nth-child(5), .problem-cell:nth-child(6) { border-bottom: 0.5px solid var(--border); }
+    .problem-cell:last-child { border-bottom: none; }
+    .tab-panel.active { grid-template-columns: 1fr; }
+    .workflow-steps { grid-template-columns: 1fr 1fr; }
+    .workflow-step { border-right: none; border-bottom: 0.5px solid var(--border); }
+    .moat-grid { grid-template-columns: 1fr; }
+    .market-layout { grid-template-columns: 1fr; }
+    .founder-layout { grid-template-columns: 1fr; }
+    .founder-portrait { max-width: 200px; }
+    .hero-stats { gap: 1.5rem; }
+    .cta-form { flex-direction: column; }
+    .cta-input { border-right: 0.5px solid var(--border2); border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">decisio<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="#product">Product</a></li>
+    <li><a href="#workflow">Workflow</a></li>
+    <li><a href="#market">Market</a></li>
+    <li><a href="#founders">Founders</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Request Access</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow fade-up">Non-life insurance · Actuarial intelligence</div>
+    <h1 class="hero-headline fade-up" style="transition-delay:0.1s">
+      The <em>reasoning layer</em><br>your reserving<br>cycle has been missing.
+    </h1>
+    <p class="hero-sub fade-up" style="transition-delay:0.2s">
+      Decisio is an AI copilot trained on actuarial reasoning — drafting reserving models, stress-testing assumptions, and generating regulatory-ready documentation for non-life actuaries.
+    </p>
+    <div class="hero-actions fade-up" style="transition-delay:0.3s">
+      <a href="#contact" class="btn-primary">Request Early Access</a>
+      <a href="#product" class="btn-ghost">See the Product</a>
+    </div>
+    <div class="hero-stats fade-up" style="transition-delay:0.4s">
+      <div>
+        <div class="hero-stat-n">&sim;15K</div>
+        <div class="hero-stat-label">FCAS / FIA Fellows worldwide</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">4–8 wks</div>
+        <div class="hero-stat-label">Typical reserve cycle length</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">&gt;70%</div>
+        <div class="hero-stat-label">Time lost to mechanical tasks</div>
+      </div>
+      <div>
+        <div class="hero-stat-n">3×</div>
+        <div class="hero-stat-label">Productivity multiplier per Fellow</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-track">
+    <span class="ticker-item"><span>//</span> Chain-ladder LDF selection</span>
+    <span class="ticker-item"><span>→</span> Bornhuetter-Ferguson a priori benchmarking</span>
+    <span class="ticker-item"><span>//</span> Cape Cod method auto-draft</span>
+    <span class="ticker-item"><span>→</span> Solvency II ORSA generation</span>
+    <span class="ticker-item"><span>//</span> Lloyd's SBF documentation</span>
+    <span class="ticker-item"><span>→</span> Tail factor selection with rationale</span>
+    <span class="ticker-item"><span>//</span> Social inflation stress scenarios</span>
+    <span class="ticker-item"><span>→</span> NAIC Statement of Actuarial Opinion</span>
+    <span class="ticker-item"><span>//</span> IBNR triangle assembly &amp; validation</span>
+    <span class="ticker-item"><span>→</span> Reserve cycle audit trail</span>
+    <!-- duplicate for loop -->
+    <span class="ticker-item"><span>//</span> Chain-ladder LDF selection</span>
+    <span class="ticker-item"><span>→</span> Bornhuetter-Ferguson a priori benchmarking</span>
+    <span class="ticker-item"><span>//</span> Cape Cod method auto-draft</span>
+    <span class="ticker-item"><span>→</span> Solvency II ORSA generation</span>
+    <span class="ticker-item"><span>//</span> Lloyd's SBF documentation</span>
+    <span class="ticker-item"><span>→</span> Tail factor selection with rationale</span>
+    <span class="ticker-item"><span>//</span> Social inflation stress scenarios</span>
+    <span class="ticker-item"><span>→</span> NAIC Statement of Actuarial Opinion</span>
+    <span class="ticker-item"><span>//</span> IBNR triangle assembly &amp; validation</span>
+    <span class="ticker-item"><span>→</span> Reserve cycle audit trail</span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem-section" id="problem">
+  <div class="container">
+    <div class="section-label fade-up">The problem</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      The most expensive talent in insurance<br>spends its days on <em>spreadsheets.</em>
+    </h2>
+    <p class="section-body fade-up" style="transition-delay:0.2s">
+      Qualified Fellows (FCAS, FIA) command £200–600K packages. Their time is the most constrained resource in any P&C operation. Yet the majority of a reserve review cycle is consumed by tasks that require precision, but not judgment.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-cell fade-up">
+        <div class="problem-cell-num">01</div>
+        <div class="problem-cell-tag tag-critical">Critical</div>
+        <div class="problem-cell-title">Triangle Construction</div>
+        <div class="problem-cell-body">Manual extraction from claims systems, pivot tables, and reconciliation loops. A single data error propagates through all downstream methods — often discovered only at sign-off.</div>
+      </div>
+      <div class="problem-cell fade-up" style="transition-delay:0.1s">
+        <div class="problem-cell-num">02</div>
+        <div class="problem-cell-tag tag-critical">Critical</div>
+        <div class="problem-cell-title">Method Selection</div>
+        <div class="problem-cell-body">No principled framework for choosing between BF, LDF, Cape Cod per line of business. Selection relies on tribal knowledge and the seniority of whoever last touched the file.</div>
+      </div>
+      <div class="problem-cell fade-up" style="transition-delay:0.15s">
+        <div class="problem-cell-num">03</div>
+        <div class="problem-cell-tag tag-high">High</div>
+        <div class="problem-cell-title">Assumption Documentation</div>
+        <div class="problem-cell-body">Actuarial memos written ad-hoc after the model is complete — often incomplete under Solvency II and NAIC requirements. Regulators are asking harder questions than ever.</div>
+      </div>
+      <div class="problem-cell fade-up" style="transition-delay:0.2s">
+        <div class="problem-cell-num">04</div>
+        <div class="problem-cell-tag tag-high">High</div>
+        <div class="problem-cell-title">Stress Testing</div>
+        <div class="problem-cell-body">Bespoke scenario scripts written per review cycle. Rarely reproducible. Regulators increasingly mandate formal stress frameworks, yet most teams still script these by hand each quarter.</div>
+      </div>
+      <div class="problem-cell fade-up" style="transition-delay:0.25s">
+        <div class="problem-cell-num">05</div>
+        <div class="problem-cell-tag tag-high">High</div>
+        <div class="problem-cell-title">Regulatory Submissions</div>
+        <div class="problem-cell-body">Reformatting reserve reports for Lloyd's, PRA, EIOPA, and NAIC is a 2–3 day clerical exercise per jurisdiction per cycle. The content is identical — the formatting is not.</div>
+      </div>
+      <div class="problem-cell fade-up" style="transition-delay:0.3s">
+        <div class="problem-cell-num">06</div>
+        <div class="problem-cell-tag tag-medium">Medium</div>
+        <div class="problem-cell-title">Peer Review Trail</div>
+        <div class="problem-cell-body">Second-actuary sign-off is done on printouts. No structured audit trail for assumption changes between cycles. When regulators ask why a tail factor moved, reconstructing the rationale takes days.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT -->
+<section class="product-section" id="product">
+  <div class="container">
+    <div class="section-label fade-up">The product</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      Four modules. One <em>complete</em><br>reserve review cycle.
+    </h2>
+    <p class="section-body fade-up" style="transition-delay:0.2s">
+      Decisio is not a dashboard you visit. It is a workflow-embedded copilot that lives inside your environment — Excel add-in, VS Code extension, or browser workbench — and provides intelligent assistance at every stage.
+    </p>
+    <div class="product-tabs fade-up" style="transition-delay:0.3s">
+      <button class="tab-btn active" onclick="switchTab(0)">Triangle Intelligence</button>
+      <button class="tab-btn" onclick="switchTab(1)">Model Drafting</button>
+      <button class="tab-btn" onclick="switchTab(2)">Stress Testing</button>
+      <button class="tab-btn" onclick="switchTab(3)">Regulatory Factory</button>
+    </div>
+
+    <!-- Tab 0: Triangle -->
+    <div class="tab-panel active" id="tab-0">
+      <div class="tab-content">
+        <div class="tab-title">Triangle Intelligence</div>
+        <p class="tab-body">Connects to raw claims extracts. Automatically detects development periods, identifies data quality issues — thin cells, negative incrementals, IBNR vs paid splits — and assembles paid, incurred, and case reserve triangles with full provenance metadata.</p>
+        <ul class="feature-list">
+          <li>Detects data anomalies before they propagate</li>
+          <li>Splits paid, incurred, and case reserve automatically</li>
+          <li>Flags statistical outliers with natural-language explanations</li>
+          <li>Connects to CSV, Excel, or database extracts</li>
+          <li>Full cell-level audit trail with source references</li>
+        </ul>
+      </div>
+      <div class="tab-visual">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--ink3);margin-bottom:8px;text-transform:uppercase">Paid loss development triangle — Motor TP</div>
+        <table class="tri-table">
+          <thead>
+            <tr>
+              <th class="row-label">AY</th>
+              <th>12m</th><th>24m</th><th>36m</th><th>48m</th><th>60m</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="row-label">2019</td><td>4,218</td><td>7,841</td><td>10,220</td><td>11,890</td><td class="highlight">12,441</td></tr>
+            <tr><td class="row-label">2020</td><td>3,902</td><td>7,120</td><td>9,880</td><td class="highlight">11,344</td><td class="ai-gen">~12,018↑</td></tr>
+            <tr><td class="row-label">2021</td><td>4,560</td><td>8,210</td><td class="highlight">11,102</td><td class="ai-gen">~12,614↑</td><td class="ai-gen">~13,371↑</td></tr>
+            <tr><td class="row-label">2022</td><td>4,891</td><td class="highlight">9,044</td><td class="ai-gen">~12,198↑</td><td class="ai-gen">~13,880↑</td><td class="ai-gen">~14,713↑</td></tr>
+            <tr><td class="row-label">2023</td><td class="highlight">5,220</td><td class="ai-gen">~9,640↑</td><td class="ai-gen">~12,996↑</td><td class="ai-gen">~14,791↑</td><td class="ai-gen">~15,682↑</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;gap:16px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--ink3)"><span style="color:var(--gold)">█</span> Actual</div>
+          <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--ink3)"><span style="color:var(--teal-light)">█</span> AI-projected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 1: Model Drafting -->
+    <div class="tab-panel" id="tab-1">
+      <div class="tab-content">
+        <div class="tab-title">Model Drafting Copilot</div>
+        <p class="tab-body">Given a triangle and line-of-business context, Decisio drafts a complete reserving model: selects methods with written rationale, selects tail factors, benchmarks against industry development patterns, and writes the first-draft actuarial memo. You review and override — the system learns from every decision.</p>
+        <ul class="feature-list">
+          <li>Selects from CL, BF, Cape Cod, Clark LDF with rationale</li>
+          <li>Industry development pattern benchmarking</li>
+          <li>Auto-written actuarial memo explaining every choice</li>
+          <li>Override learning — system calibrates to your style</li>
+          <li>Multi-year comparison with prior cycle assumptions</li>
+        </ul>
+      </div>
+      <div class="tab-visual">
+        <div class="memo-block">
+          <div class="memo-heading">METHOD SELECTION RATIONALE — PROPERTY DAMAGE</div>
+          <div style="height:6px"></div>
+          <span class="memo-ai">Decisio recommends</span> Bornhuetter-Ferguson for accident years 2021–2023, and volume-weighted chain-ladder for 2018–2020.<br><br>
+          <span class="memo-cite">Rationale:</span> The 2021–2023 accident years exhibit thin credibility at longer development periods (cell counts &lt;15). BF a priori loss ratios are anchored to the <span class="memo-cite">industry Property TP benchmark of 68.2%</span> per CAS 2023 development study. Chain-ladder is appropriate for 2018–2020 where development patterns are fully credible at all periods.<br><br>
+          <span class="memo-cite">Tail factor:</span> 1.048 selected, consistent with the 5-year weighted average. No structural reason to deviate from industry tail.
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Stress Testing -->
+    <div class="tab-panel" id="tab-2">
+      <div class="tab-content">
+        <div class="tab-title">Stress Test Engine</div>
+        <p class="tab-body">A formal stress scenario library — large loss emergence, social inflation shocks, settlement pattern shift, cat loss development — run across the full model in seconds. Produces waterfall charts, sensitivity tables, and narrative summaries identifying which assumptions are the principal drivers of reserve uncertainty.</p>
+        <ul class="feature-list">
+          <li>Pre-built scenario library: social inflation, cat, litigation</li>
+          <li>Runs all scenarios simultaneously — results in seconds</li>
+          <li>Identifies primary sensitivity drivers per line</li>
+          <li>Reproducible — same scenario, same output, every cycle</li>
+          <li>Narrative summary for board pack integration</li>
+        </ul>
+      </div>
+      <div class="tab-visual">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--ink3);margin-bottom:10px;text-transform:uppercase">Reserve sensitivity — Base vs stress scenarios</div>
+        <div class="scenario-row">
+          <div>
+            <div class="scenario-label">Base case</div>
+          </div>
+          <div class="scenario-bar-wrap"><div class="scenario-bar" style="width:60%"></div></div>
+          <div class="scenario-val val-base">£ 142.4M</div>
+        </div>
+        <div class="scenario-row">
+          <div>
+            <div class="scenario-label">Social inflation +15%</div>
+          </div>
+          <div class="scenario-bar-wrap"><div class="scenario-bar red" style="width:80%"></div></div>
+          <div class="scenario-val val-neg">£ 163.8M</div>
+        </div>
+        <div class="scenario-row">
+          <div>
+            <div class="scenario-label">Tail elongation +20%</div>
+          </div>
+          <div class="scenario-bar-wrap"><div class="scenario-bar red" style="width:72%"></div></div>
+          <div class="scenario-val val-neg">£ 157.2M</div>
+        </div>
+        <div class="scenario-row">
+          <div>
+            <div class="scenario-label">Cat adverse development</div>
+          </div>
+          <div class="scenario-bar-wrap"><div class="scenario-bar red" style="width:90%"></div></div>
+          <div class="scenario-val val-neg">£ 181.1M</div>
+        </div>
+        <div class="scenario-row">
+          <div>
+            <div class="scenario-label">Settlement acceleration</div>
+          </div>
+          <div class="scenario-bar-wrap"><div class="scenario-bar teal" style="width:40%"></div></div>
+          <div class="scenario-val val-pos">£ 128.9M</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Regulatory -->
+    <div class="tab-panel" id="tab-3">
+      <div class="tab-content">
+        <div class="tab-title">Regulatory Document Factory</div>
+        <p class="tab-body">Transforms the completed model into jurisdiction-specific output: Lloyd's SBF, UK PRA Section 57, NAIC Statement of Actuarial Opinion, Solvency II ORSA. Understands the structural requirements of each format. Actuaries edit the draft rather than write from scratch — a 2-day task becomes 90 minutes.</p>
+        <ul class="feature-list">
+          <li>Lloyd's SBF — full market reform format</li>
+          <li>UK PRA / EIOPA Solvency II ORSA</li>
+          <li>NAIC Statement of Actuarial Opinion</li>
+          <li>Regulatory reference citations from live knowledge base</li>
+          <li>Version-tracked across cycles for PRA continuity reviews</li>
+        </ul>
+      </div>
+      <div class="tab-visual">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--gold);margin-bottom:8px;text-transform:uppercase">Active output — Lloyd's SBF Section 4.3</div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(192,57,43,0.12);color:#e07060;border:0.5px solid rgba(192,57,43,0.3)">Lloyd's SBF</span>
+          <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(200,169,110,0.1);color:var(--gold);border:0.5px solid var(--gold-line)">PRA S57</span>
+          <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(26,122,110,0.1);color:var(--teal-light);border:0.5px solid rgba(26,122,110,0.3)">NAIC SAO</span>
+          <span style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(200,169,110,0.1);color:var(--gold);border:0.5px solid var(--gold-line)">SII ORSA</span>
+        </div>
+        <div class="memo-block" style="font-size:10px">
+          <div class="memo-heading">4.3 RESERVE ADEQUACY — CLAIMS PROVISIONS</div>
+          <div style="height:5px"></div>
+          The Syndicate's carried reserves at <span class="memo-cite">31 December 2024</span> represent the appointed actuary's best estimate of the ultimate cost of claims incurred to date. Reserves have been set in accordance with <span class="memo-cite">Lloyd's Valuation of Liabilities Rules (2024)</span>.<br><br>
+          <span class="memo-ai">[AI draft — review for Syndicate-specific adjustments]</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--ink3);margin-top:8px">⚡ Generated in 4.2s · 2 jurisdictions · 1 click to export</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section class="workflow-section" id="workflow">
+  <div class="container">
+    <div class="section-label fade-up">The workflow</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      From raw data extract<br>to <em>filed report.</em> In days, not weeks.
+    </h2>
+    <div class="workflow-steps fade-up" style="transition-delay:0.2s">
+      <div class="workflow-step">
+        <div class="step-num">Step 01</div>
+        <div class="step-icon">⬡</div>
+        <div class="step-title">Data Ingestion &amp; Triangle Assembly</div>
+        <div class="step-body">Connect claims extract. Decisio assembles paid, incurred, and case reserve triangles with full data quality checks and provenance metadata.</div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">Step 02</div>
+        <div class="step-icon">◈</div>
+        <div class="step-title">Method Selection &amp; Model Draft</div>
+        <div class="step-body">AI selects reserving methods per line with written rationale. Drafts the full model including tail factors, benchmarked against industry patterns.</div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">Step 03</div>
+        <div class="step-icon">◎</div>
+        <div class="step-title">Actuary Review &amp; Override</div>
+        <div class="step-body">Fellow reviews every decision. Overrides are captured with context. The model learns your team's judgment patterns across cycles — becoming uniquely yours.</div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">Step 04</div>
+        <div class="step-icon">⬟</div>
+        <div class="step-title">Stress Test &amp; Sensitivity</div>
+        <div class="step-body">Formal scenario library runs in seconds. Results package includes waterfall charts, sensitivity drivers, and board-ready narrative summary.</div>
+      </div>
+      <div class="workflow-step">
+        <div class="step-num">Step 05</div>
+        <div class="step-icon">◻</div>
+        <div class="step-title">Regulatory Document Generation</div>
+        <div class="step-body">One-click transformation to Lloyd's SBF, PRA, NAIC, or ORSA format. Edit the draft — not the blank page. File with confidence.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOAT -->
+<section class="moat-section">
+  <div class="container">
+    <div class="section-label fade-up">Why Decisio endures</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      Four structural advantages<br>no wrapper can <em>replicate.</em>
+    </h2>
+    <div class="moat-grid fade-up" style="transition-delay:0.2s">
+      <div class="moat-cell">
+        <div class="moat-label">Moat 01 — Domain depth</div>
+        <div class="moat-title">Not a GPT wrapper. A reasoning engine.</div>
+        <div class="moat-body">Generic AI produces plausible-sounding actuarial text with subtle methodological errors — wrong tail factor logic, misapplied BF a priori selection. A Fellow spots these immediately and the trust is gone. Decisio's numerical kernel runs all triangle math deterministically. The LLM reasons about outputs it did not compute. The gap cannot be closed by a chatbot.</div>
+      </div>
+      <div class="moat-cell">
+        <div class="moat-label">Moat 02 — Override learning</div>
+        <div class="moat-title">The system becomes uniquely yours over time.</div>
+        <div class="moat-body">Every override captured with context. After 3–4 reserve cycles, Decisio is calibrated to your team's judgment patterns, house style, and risk appetite in a way no competitor can replicate without your data. Switching cost becomes prohibitive — it would take a year for a replacement system to reach the same standard.</div>
+      </div>
+      <div class="moat-cell">
+        <div class="moat-label">Moat 03 — Regulatory currency</div>
+        <div class="moat-title">A living knowledge base that keeps pace with regulators.</div>
+        <div class="moat-body">Lloyd's market reform, PRA SS3/17 updates, NAIC ASOP revisions — regulatory requirements shift constantly. Decisio maintains a continuously updated regulatory knowledge base. Once actuaries rely on it for submission formatting, they cannot switch without rebuilding the entire regulatory mapping from scratch in a competing tool.</div>
+      </div>
+      <div class="moat-cell">
+        <div class="moat-label">Moat 04 — Professional trust network</div>
+        <div class="moat-title">Credentialed profession. Reputation is everything.</div>
+        <div class="moat-body">The actuarial community is insular, credentialed, and risk-averse. One CRO at a Lloyd's managing agent who publicly endorses Decisio reaches 40 peers within months. Trust capital in a tiny professional community where reputation is the primary decision criterion is the hardest moat of all to build — and the hardest to destroy once earned.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARKET -->
+<section class="market-section" id="market">
+  <div class="container">
+    <div class="section-label fade-up">The market</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      A small pool. An <em>enormous</em><br>value concentration.
+    </h2>
+    <div class="market-layout">
+      <div class="fade-up" style="transition-delay:0.15s">
+        <p class="section-body" style="margin-bottom:2rem">The buyer pool is deliberately small — credentialing takes 7–10 years and pass rates on later exams are in the single digits. But these professionals operate at the centre of reserving decisions that touch billions in capital.</p>
+        <div class="icp-card primary">
+          <div class="icp-badge p">Primary buyer</div>
+          <div class="icp-title">Chief Actuary / Head of Reserving</div>
+          <div class="icp-body">London Market managing agent, mid-tier UK non-life insurer, or Bermuda reinsurer. Team size 3–12. Running quarterly GAAP and Solvency II reserve reviews. Budget authority $200K–$800K/yr. Evaluated on reserve accuracy and regulatory compliance.</div>
+        </div>
+        <div class="icp-card secondary">
+          <div class="icp-badge s">Secondary buyer</div>
+          <div class="icp-title">Actuarial Consulting Practice</div>
+          <div class="icp-body">Big 4, Milliman, WTW, Gallagher Re. Running reserve reviews for 10–50 carrier clients annually. Decisio as a practice tool multiplies billable throughput without headcount. Licensing per review, not per seat.</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:0.5rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--ink3);border:0.5px solid var(--border);padding:6px 12px">Phase 1 · London Market</div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--ink3);border:0.5px solid var(--border);padding:6px 12px">Phase 2 · Bermuda + US E&amp;S</div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--ink3);border:0.5px solid var(--border);padding:6px 12px">Phase 3 · Global</div>
+        </div>
+      </div>
+      <div class="fade-up" style="transition-delay:0.25s">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:1.25rem">Pricing tiers</div>
+        <div class="pricing-row">
+          <div>
+            <div class="pricing-tier">Analyst</div>
+            <div class="pricing-desc">Small syndicates · startup insurers · up to 5 LoB</div>
+          </div>
+          <div class="pricing-price">$60K / yr</div>
+        </div>
+        <div class="pricing-row">
+          <div>
+            <div class="pricing-tier">Practice</div>
+            <div class="pricing-desc">Mid-tier carriers · consulting firms · unlimited LoB</div>
+          </div>
+          <div class="pricing-price">$180K / yr</div>
+        </div>
+        <div class="pricing-row">
+          <div>
+            <div class="pricing-tier">Enterprise</div>
+            <div class="pricing-desc">Large carriers · reinsurers · on-premise option</div>
+          </div>
+          <div class="pricing-price">$400–700K / yr</div>
+        </div>
+        <div class="pricing-row">
+          <div>
+            <div class="pricing-tier">Consulting Seat</div>
+            <div class="pricing-desc">Per-actuary per-review · scales with practice volume</div>
+          </div>
+          <div class="pricing-price">$12K / seat</div>
+        </div>
+        <div style="background:var(--bg3);border:0.5px solid var(--border);padding:1.5rem;margin-top:1.5rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem">Series A milestone</div>
+          <div style="font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1.1">$5.5M ARR</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:4px">at 20 Practice + 5 Enterprise accounts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="roadmap-section">
+  <div class="container">
+    <div class="section-label fade-up">Go-to-market</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      London Market first.<br>Then <em>the world.</em>
+    </h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-top:0.5rem">
+      <div class="roadmap-line fade-up" style="transition-delay:0.2s">
+        <div class="roadmap-item">
+          <div class="roadmap-period">Months 0–6 · Design partner phase</div>
+          <div class="roadmap-title">Embed with 3–5 actuarial teams</div>
+          <div class="roadmap-body">Deep R&D partnerships with influential Fellows. No revenue — pure product build. Goal: a model drafting copilot that passes the "I'd use this" test from an FCAS or FIA. Every override is training data.</div>
+        </div>
+        <div class="roadmap-item phase2">
+          <div class="roadmap-period p2">Months 6–12 · Credibility launch</div>
+          <div class="roadmap-title">CAS or GIRO paper + first paid pilots</div>
+          <div class="roadmap-body">Publish a technical paper at CAS or present at GIRO demonstrating methodology and benchmark accuracy. This is the primary trust channel in a credentialed profession. Convert design partners to $30–60K pilots.</div>
+        </div>
+        <div class="roadmap-item phase2">
+          <div class="roadmap-period p2">Months 12–24 · London concentration</div>
+          <div class="roadmap-title">10 managing agent accounts</div>
+          <div class="roadmap-body">One actuarial sales specialist — an ex-Fellow who knows the workflow. Target Lloyd's managing agents directly: identical reserving cycle, templated onboarding. Pursue endorsement from a Lloyd's market body.</div>
+        </div>
+        <div class="roadmap-item phase3">
+          <div class="roadmap-period p3">Year 3+ · Bermuda + US expansion</div>
+          <div class="roadmap-title">Global via reinsurance relationships</div>
+          <div class="roadmap-body">London managing agents have retrocession and reinsurance relationships with Bermuda and US E&S carriers. Use these as warm referral paths. Localize regulatory factory for NAIC. Pursue Milliman or WTW practice partnership.</div>
+        </div>
+      </div>
+      <div class="fade-up" style="transition-delay:0.3s">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:1.5rem">Expansion surface</div>
+        <div style="background:var(--bg2);border:0.5px solid var(--border);padding:1.75rem;margin-bottom:1rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--teal-light);text-transform:uppercase;margin-bottom:0.5rem">Natural expansion · Pricing</div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:0.4rem">Reserving → Pricing Intelligence</div>
+          <div style="font-size:13px;color:var(--ink2);line-height:1.65;font-weight:300">The same triangle data that drives reserving is the foundation of pricing actuarial work. A Pricing Intelligence module doubles the addressable user base without changing the ICP or the technical stack.</div>
+        </div>
+        <div style="background:var(--bg2);border:0.5px solid var(--border);padding:1.75rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:0.5rem">Strategic expansion · Capital</div>
+          <div style="font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:0.4rem">Reserve Uncertainty → Capital Models</div>
+          <div style="font-size:13px;color:var(--ink2);line-height:1.65;font-weight:300">Solvency II internal models and Lloyd's capital setting both consume reserve uncertainty outputs. Decisio's stress scenarios are a direct input to capital modeling — a pathway to the CRO and CFO as second buyers.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDERS -->
+<section class="founders-section" id="founders">
+  <div class="container">
+    <div class="section-label fade-up">The team</div>
+    <h2 class="section-title fade-up" style="transition-delay:0.1s">
+      Built by someone who has <em>lived</em><br>the problem.
+    </h2>
+    <div class="founder-layout fade-up" style="transition-delay:0.2s">
+      <div>
+        <div class="founder-portrait">
+          <div class="founder-initials">SK</div>
+        </div>
+      </div>
+      <div>
+        <div class="founder-name">Shivam Kashyap</div>
+        <div class="founder-title">Founder &amp; CEO · Decisio</div>
+        <p class="founder-bio">
+          Shivam built Decisio from a simple observation: the most credentialed technical professionals in the insurance industry spend the majority of their working hours on mechanical tasks that produce no insight. Triangles assembled by hand. Memos written from blank pages at midnight before sign-off deadlines. Stress scenarios re-scripted every quarter from memory.
+        </p>
+        <p class="founder-bio">
+          His background spans actuarial modeling, machine learning, and the specific institutional knowledge of how the London Market actually operates — the informal networks, the regulatory cadence, the quiet trust that flows between Fellows at GIRO. Decisio is built to earn its place in that world through methodological rigour, not a sales pitch.
+        </p>
+        <div class="founder-credentials">
+          <span class="cred-tag">Non-life insurance</span>
+          <span class="cred-tag">Actuarial modeling</span>
+          <span class="cred-tag">ML / fine-tuning</span>
+          <span class="cred-tag">London Market</span>
+          <span class="cred-tag">Reserve methodology</span>
+          <span class="cred-tag">Regulatory compliance</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:4rem;padding-top:3rem;border-top:0.5px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:1.5rem">The team we are building</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)">
+        <div style="background:var(--bg2);padding:1.5rem 1.25rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:0.6rem">Technical Co-founder</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:0.4rem">ML Engineer · NLP</div>
+          <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;font-weight:300">Fine-tuning and domain model architecture. Must understand why chain-ladder arithmetic must never be done by an LLM.</div>
+        </div>
+        <div style="background:var(--bg2);padding:1.5rem 1.25rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:0.6rem">Actuarial Co-founder</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:0.4rem">FCAS or FIA · 8–12 yrs</div>
+          <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;font-weight:300">Product without a credentialed Fellow is immediately distrusted. Needed for CAS/GIRO publishing and professional network access.</div>
+        </div>
+        <div style="background:var(--bg2);padding:1.5rem 1.25rem">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:0.6rem">First Sales Hire</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:0.4rem">Ex-Fellow, commercial role</div>
+          <div style="font-size:12.5px;color:var(--ink3);line-height:1.65;font-weight:300">Actuaries do not buy from people who do not understand reserve adequacy. Peer credibility is mandatory for the first sale.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="container">
+    <div class="cta-eyebrow">Early access · London Market priority</div>
+    <h2 class="cta-title">
+      Your next reserve cycle<br>starts with <em>Decisio.</em>
+    </h2>
+    <p class="cta-sub">
+      We are onboarding design partners from Lloyd's managing agents, UK non-life carriers, and actuarial consulting practices. Limited access. Fellows prioritised.
+    </p>
+    <form class="cta-form" onsubmit="handleSubmit(event)">
+      <input type="email" class="cta-input" placeholder="your.name@syndicate.com" id="email-input">
+      <button type="submit" class="cta-submit">Request Access →</button>
+    </form>
+    <div id="form-confirm" style="display:none;font-family:var(--mono);font-size:11px;letter-spacing:0.1em;color:var(--gold);margin-top:1rem">
+      ✓ Noted. We will be in touch within 48 hours.
+    </div>
+    <div style="margin-top:3rem;display:flex;justify-content:center;gap:3rem;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink3)">Data residency</div>
+        <div style="font-family:var(--serif);font-size:15px;color:var(--ink2);margin-top:4px">SOC 2 Type II · VPC isolated</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink3)">On-premise option</div>
+        <div style="font-family:var(--serif);font-size:15px;color:var(--ink2);margin-top:4px">Available for Enterprise</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink3)">Implementation</div>
+        <div style="font-family:var(--serif);font-size:15px;color:var(--ink2);margin-top:4px">Onboarded in one reserve cycle</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">decisio<span>.</span></div>
+    <div class="footer-copy">
+      Actuarial intelligence for non-life reserving<br>
+      <span style="opacity:0.5">© 2025 Decisio · All rights reserved</span>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#product">Product</a></li>
+      <li><a href="#founders">Team</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  // Tab switching
+  function switchTab(index) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === index);
+    });
+    document.querySelectorAll('.tab-panel').forEach((p, i) => {
+      p.classList.toggle('active', i === index);
+    });
+  }
+
+  // Fade-up on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // CTA form
+  function handleSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('email-input');
+    if (input.value && input.value.includes('@')) {
+      input.parentElement.style.display = 'none';
+      document.getElementById('form-confirm').style.display = 'block';
+    }
+  }
+
+  // Smooth nav active state
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--gold)' : '';
+    });
+  });
+</script>
+</body>
+</html>
